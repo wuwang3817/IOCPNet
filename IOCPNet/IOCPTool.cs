@@ -103,6 +103,7 @@ namespace PENet
                     break;
                 case IOCPColor.None:
                 default:
+                    Console.WriteLine(msg);
                     break;
             }
 

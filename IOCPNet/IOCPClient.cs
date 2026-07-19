@@ -11,9 +11,11 @@ namespace PENet
     {
         Socket skt;
         SocketAsyncEventArgs saea;
+        
         public IOCPClient()
         {
             saea = new SocketAsyncEventArgs();
+            saea.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
         }
         public void StartAsClient(string ip,int port)
         {
@@ -29,7 +31,12 @@ namespace PENet
             bool suspend=skt.ConnectAsync(saea);
             if(!suspend)
             {
+                IOCPTool.Log("连接成功");
                 ProcessConnect();
+            }
+            else
+            {
+                IOCPTool.Log("连接挂起");
             }
         }
 
@@ -37,7 +44,12 @@ namespace PENet
         //异步事件没有挂起来：连接建立成功，创建连接管理类，开始数据收发
         void ProcessConnect()
         {
+            //TODO: 连接成功后，创建连接管理类，开始数据收发
+        }
 
+        void IO_Completed(object sender,SocketAsyncEventArgs e)
+        {
+            ProcessConnect();
         }
     }
 }
