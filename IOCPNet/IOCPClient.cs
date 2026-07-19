@@ -6,7 +6,7 @@ using System.Text;
 
 namespace PENet
 {
-    //基于IOCP封装的异步套接字通信
+    //基于IOCP封装的异步套接字通信 客户端
     public class IOCPClient
     {
         Socket skt;
@@ -31,7 +31,6 @@ namespace PENet
             bool suspend=skt.ConnectAsync(saea);
             if(!suspend)
             {
-                IOCPTool.Log("连接成功");
                 ProcessConnect();
             }
             else
@@ -45,10 +44,12 @@ namespace PENet
         void ProcessConnect()
         {
             //TODO: 连接成功后，创建连接管理类，开始数据收发
+            IOCPTool.Log("连接成功");
         }
 
-        void IO_Completed(object sender,SocketAsyncEventArgs e)
+        void IO_Completed(object sender,SocketAsyncEventArgs saea)
         {
+
             ProcessConnect();
         }
     }
