@@ -11,6 +11,24 @@ namespace PENet
     /// </summary>
     public class IOCPTool
     {
+        public static byte[] SplitLogicBytes(ref List<byte> byteLst)
+        {
+            byte[] buff=null;
+            if(byteLst.Count>4)
+            {
+                byte[] data=byteLst.ToArray();
+                int len=BitConverter.ToInt32(data,0);
+                if(byteLst.Count>=len+4)
+                {
+                    buff=new byte[len];
+                    Buffer.BlockCopy(data,4,buff,0,len);
+                    byteLst.RemoveRange(0,len+4);
+                }
+                
+            }
+            return buff;
+        }
+
         #region LOG
         public static Action<string> LogFunc;
         public static Action<IOCPColor,string> ColorLogFunc;
