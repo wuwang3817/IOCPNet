@@ -30,6 +30,15 @@ namespace PENet
             }
             return buff;
         }
+        public static byte[] PackLenInfo(byte[] data)
+        {
+            int len = data.Length;
+            byte[] pkg=new byte[len+4];
+            byte[] head=BitConverter.GetBytes(len);
+            head.CopyTo(pkg,0);
+            data.CopyTo(pkg,4);
+            return pkg;
+        }
 
         public static byte[] Serialize(IOCPMsg msg)
         {
