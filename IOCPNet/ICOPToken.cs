@@ -67,6 +67,9 @@ namespace PENet
             byte[] buff=IOCPTool.SplitLogicBytes(ref readLst);
             if(buff!=null)
             {
+                IOCPMsg msg=IOCPTool.Deserialize(buff);
+                OnReceiveMsg(msg);
+                ProcessByteLst();
             }
         }
         void IO_Completed(object sender, SocketAsyncEventArgs saea)
@@ -82,6 +85,11 @@ namespace PENet
         void OnConnected()
         {
             IOCPTool.Log("Connect Success");
+        }
+
+        void OnReceiveMsg(IOCPMsg msg)
+        {
+            IOCPTool.Log("收到数据"+msg.hellomsg);
         }
     }
 }
