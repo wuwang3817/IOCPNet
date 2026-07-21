@@ -46,6 +46,7 @@ namespace PENet
 
         void StartAccept()
         {
+            saea.AcceptSocket = null;
             acceptSeamapore.WaitOne();
             bool suspend = skt.AcceptAsync(saea);
             if (!suspend)
@@ -92,6 +93,20 @@ namespace PENet
             else
             {
                 IOCPTool.Error("Token:{0} cannot find in server tokenLst.", tokenID);
+            }
+        }
+
+        public void CloseServer()
+        {
+           for(int i=0;i<tokenLst.Count; i++)
+           {
+                tokenLst[i].CloseToken();
+           }
+           tokenLst = null;
+           if (skt!=null)
+           {
+                skt.Close();
+                skt = null;
             }
         }
         public List<IOCPToken> GetTokenLst()
