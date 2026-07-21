@@ -12,6 +12,9 @@ namespace PENet
         Socket skt;
         SocketAsyncEventArgs saea;
         public int backlog = 100;
+        IOCPTokenPool pool;
+        List<IOCPToken> tokenLst;
+
         public IOCPServer()
         {
             saea = new SocketAsyncEventArgs();
@@ -20,6 +23,13 @@ namespace PENet
 
         public void StartAsServer(string ip, int port, int maxConnCout)
         {
+            pool = new IOCPTokenPool(maxConnCout);
+            for(int i = 0; i < maxConnCout; i++)
+            {
+                IOCPToken token = new IOCPToken { tokenID = i };
+                pool.Push(token);
+            }
+            tokenLst = new List<IOCPToken>();
             IPEndPoint pt = new IPEndPoint(IPAddress.Parse(ip), port);
             skt = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             skt.Bind(pt);
