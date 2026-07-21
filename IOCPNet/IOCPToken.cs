@@ -19,6 +19,7 @@ namespace PENet
         private List<byte> readLst=new List<byte>();
         private Queue<byte[]> cacheQue=new Queue<byte[]>();
         private bool isWrite = false;
+        public Action<int> onTokenClose;
         public TokenState tokenState= TokenState.None;
         private SocketAsyncEventArgs rcvSAEA;
         private SocketAsyncEventArgs sndSAEA;
@@ -144,6 +145,7 @@ namespace PENet
             if (skt != null)
             {
                 tokenState=TokenState.Disconnected;
+                onTokenClose?.Invoke(tokenID);
                 OnDisConnected();
                 readLst.Clear();
                 cacheQue.Clear();
