@@ -12,7 +12,7 @@ namespace PENet
         Connected,
         Disconnected,
     }
-    public class ICOPToken
+    public class IOCPToken
     {
         public int tokenID;
         private Socket skt;
@@ -23,7 +23,7 @@ namespace PENet
         private SocketAsyncEventArgs rcvSAEA;
         private SocketAsyncEventArgs sndSAEA;
 
-        public ICOPToken() 
+        public IOCPToken() 
         {
             rcvSAEA=new SocketAsyncEventArgs();
             sndSAEA=new SocketAsyncEventArgs();
@@ -141,7 +141,27 @@ namespace PENet
 
         public void CloseToken()
         {
-
+            if (skt != null)
+            {
+                tokenState=TokenState.Disconnected;
+                OnDisConnected();
+                readLst.Clear();
+                cacheQue.Clear();
+                isWrite=false;
+                try
+                {
+                    skt.Shutdown(SocketShutdown.Send);
+                }
+                catch (Exception e)
+                {
+                    IOCPTool.Error("Shutdown Socket Error:{0}",e.ToString());
+                }
+                finally
+                {
+                    skt.Close();
+                    skt = null;
+                }
+            }
         }
 
         void OnConnected()
@@ -152,6 +172,11 @@ namespace PENet
         void OnReceiveMsg(IOCPMsg msg)
         {
             IOCPTool.Log("收到数据"+msg.hellomsg);
+        }
+
+        void OnDisConnected()
+        {
+            IOCPTool.Log("DisConnected");
         }
     }
 }

@@ -10,7 +10,9 @@ namespace PENet
     public class IOCPClient
     {
         Socket skt;
+        public IOCPToken token;
         SocketAsyncEventArgs saea;
+        
         
         public IOCPClient()
         {
@@ -43,8 +45,23 @@ namespace PENet
         //异步事件没有挂起来：连接建立成功，创建连接管理类，开始数据收发
         void ProcessConnect()
         {
+            token= new IOCPToken();
+            token.InitToken(skt);
             //TODO: 连接成功后，创建连接管理类，开始数据收发
             IOCPTool.Log("连接成功");
+        }
+
+        public void CloseClient()
+        {
+            if(token!=null)
+            {
+                token.CloseToken();
+                token=null;
+            }
+            if(skt!=null)
+            {
+                skt=null;
+            }
         }
 
         void IO_Completed(object sender,SocketAsyncEventArgs saea)
