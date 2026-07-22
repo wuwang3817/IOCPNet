@@ -1,30 +1,80 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
+using System.Net.Sockets;
+using System.Collections.Generic;
 
 namespace PENet
 {
-    //基于IOCP封装的异步套接字通信 服务端
-    public class IOCPServer
+    [Serializable]
+    //网络数据协议消息体
+    public abstract class IOCPMsg { }
+
+    //基于IOCP封装的异步套接字通信
+    public class IOCPNet
     {
         Socket skt;
         SocketAsyncEventArgs saea;
 
-        int curConnCount = 0;
-        public int backlog = 100;
-        Semaphore acceptSeamapore;
-        IOCPTokenPool pool;
-        List<IOCPToken> tokenLst;
-
-        public IOCPServer()
+        public IOCPNet()
         {
             saea = new SocketAsyncEventArgs();
             saea.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
         }
 
+        #region Client
+        public IOCPToken token;
+        public void StartAsClient(string ip, int port)
+        {
+            IPEndPoint pt = new IPEndPoint(IPAddress.Parse(ip), port);
+            skt = new Socket(pt.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            saea.RemoteEndPoint = pt;
+            IOCPTool.ColorLog(IOCPColor.Green, "Client Start");
+            StartConnect();
+        }
+        void StartConnect()
+        {
+            bool suspend = skt.ConnectAsync(saea);
+            if (!suspend)
+            {
+                ProcessConnect();
+            }
+            else
+            {
+                IOCPTool.Log("连接挂起");
+            }
+        }
+
+        //异步事件挂起：连接没有建立成功，等待连接建立后在创建连接管理类，开始数据收发
+        //异步事件没有挂起来：连接建立成功，创建连接管理类，开始数据收发
+        void ProcessConnect()
+        {
+            token = new IOCPToken();
+            token.InitToken(skt);
+            //TODO: 连接成功后，创建连接管理类，开始数据收发
+            IOCPTool.Log("连接成功");
+        }
+
+        public void CloseClient()
+        {
+            if (token != null)
+            {
+                token.CloseToken();
+                token = null;
+            }
+            if (skt != null)
+            {
+                skt = null;
+            }
+        }
+        #endregion
+
+        #region Server
+        int curConnCount = 0;
+        public int backlog = 100;
+        Semaphore acceptSeamapore;
+        IOCPTokenPool pool;
+        List<IOCPToken> tokenLst;
         public void StartAsServer(string ip, int port, int maxConnCout)
         {
             curConnCount = 0;
@@ -43,7 +93,6 @@ namespace PENet
             IOCPTool.ColorLog(IOCPColor.Green, "Server Start");
             StartAccept();
         }
-
         void StartAccept()
         {
             saea.AcceptSocket = null;
@@ -54,7 +103,6 @@ namespace PENet
                 ProcessAccept();
             }
         }
-
         void ProcessAccept()
         {
             Interlocked.Increment(ref curConnCount);
@@ -68,7 +116,6 @@ namespace PENet
             IOCPTool.ColorLog(IOCPColor.Green, "Client Online, Allocate tokenID:{0}", token.tokenID);
             StartAccept();
         }
-
         void OnTokenClose(int tokenID)
         {
             int index = -1;
@@ -95,7 +142,6 @@ namespace PENet
                 IOCPTool.Error("Token:{0} cannot find in server tokenLst.", tokenID);
             }
         }
-
         public void CloseServer()
         {
            for(int i=0;i<tokenLst.Count; i++)
@@ -113,10 +159,22 @@ namespace PENet
         {
             return tokenLst;
         }
+        #endregion
 
         void IO_Completed(object sender, SocketAsyncEventArgs saea)
         {
-            ProcessAccept();
+            switch(saea.LastOperation)
+            {
+                case SocketAsyncOperation.Accept:
+                    ProcessAccept();
+                    break;
+                case SocketAsyncOperation.Connect:
+                    ProcessConnect();
+                    break;
+                default:
+                    IOCPTool.Warn("The last operation completed on the socket was not a accept or connect op");
+                    break;
+            }
         }
     }
 }
