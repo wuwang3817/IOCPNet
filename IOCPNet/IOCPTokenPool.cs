@@ -3,15 +3,15 @@
 namespace PENet
 {
     //IOCP会话连接缓存池
-    public class IOCPTokenPool
+    public class IOCPTokenPool<T,K> where T: IOCPToken<K>,new() where K: IOCPMsg,new()
     {
-        Stack<IOCPToken> stk;
+        Stack<T> stk;
         public int Size=> stk.Count;
         public IOCPTokenPool(int capacity)
         {
-            stk=new Stack<IOCPToken>(capacity);
+            stk=new Stack<T>(capacity);
         }
-        public IOCPToken Pop()
+        public T Pop()
         {
             lock(stk)
             {
@@ -19,7 +19,7 @@ namespace PENet
             }
         }
 
-        public void Push(IOCPToken token)
+        public void Push(T token)
         {
             if(token==null)
             {

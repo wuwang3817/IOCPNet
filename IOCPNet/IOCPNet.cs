@@ -11,7 +11,7 @@ namespace PENet
     public abstract class IOCPMsg { }
 
     //基于IOCP封装的异步套接字通信
-    public class IOCPNet
+    public class IOCPNet<T,K> where T: IOCPToken<K>,new() where K: IOCPMsg,new()
     {
         Socket skt;
         SocketAsyncEventArgs saea;
@@ -23,7 +23,7 @@ namespace PENet
         }
 
         #region Client
-        public IOCPToken token;
+        public T token;
         public void StartAsClient(string ip, int port)
         {
             IPEndPoint pt = new IPEndPoint(IPAddress.Parse(ip), port);
@@ -49,7 +49,7 @@ namespace PENet
         //异步事件没有挂起来：连接建立成功，创建连接管理类，开始数据收发
         void ProcessConnect()
         {
-            token = new IOCPToken();
+            token = new T();
             token.InitToken(skt);
             //TODO: 连接成功后，创建连接管理类，开始数据收发
             IOCPTool.Log("连接成功");
@@ -73,19 +73,19 @@ namespace PENet
         int curConnCount = 0;
         public int backlog = 100;
         Semaphore acceptSeamapore;
-        IOCPTokenPool pool;
-        List<IOCPToken> tokenLst;
+        IOCPTokenPool<T,K> pool;
+        List<T> tokenLst;
         public void StartAsServer(string ip, int port, int maxConnCout)
         {
             curConnCount = 0;
             acceptSeamapore=new Semaphore(maxConnCout, maxConnCout);
-            pool = new IOCPTokenPool(maxConnCout);
+            pool = new IOCPTokenPool<T,K>(maxConnCout);
             for(int i = 0; i < maxConnCout; i++)
             {
-                IOCPToken token = new IOCPToken { tokenID = i };
+                T token = new T { tokenID = i };
                 pool.Push(token);
             }
-            tokenLst = new List<IOCPToken>();
+            tokenLst = new List<T>();
             IPEndPoint pt = new IPEndPoint(IPAddress.Parse(ip), port);
             skt = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             skt.Bind(pt);
@@ -106,7 +106,7 @@ namespace PENet
         void ProcessAccept()
         {
             Interlocked.Increment(ref curConnCount);
-            IOCPToken token=pool.Pop();
+            T token=pool.Pop();
             lock(tokenLst)
             {
                 tokenLst.Add(token);
@@ -155,7 +155,7 @@ namespace PENet
                 skt = null;
             }
         }
-        public List<IOCPToken> GetTokenLst()
+        public List<T> GetTokenLst()
         {
             return tokenLst;
         }

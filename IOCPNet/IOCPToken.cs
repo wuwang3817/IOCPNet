@@ -12,7 +12,7 @@ namespace PENet
         Connected,
         Disconnected,
     }
-    public class IOCPToken
+    public abstract class IOCPToken<T> where T: IOCPMsg,new()
     {
         public int tokenID;
         private Socket skt;
@@ -71,15 +71,15 @@ namespace PENet
             byte[] buff=IOCPTool.SplitLogicBytes(ref readLst);
             if(buff!=null)
             {
-                IOCPMsg msg=IOCPTool.Deserialize(buff);
+                T msg=IOCPTool.Deserialize<T>(buff);
                 OnReceiveMsg(msg);
                 ProcessByteLst();
             }
         }
 
-        public bool SendMsg(IOCPMsg msg)
+        public bool SendMsg(T msg)
         {
-            byte[] bytes = IOCPTool.PackLenInfo(IOCPTool.Serialize(msg));
+            byte[] bytes = IOCPTool.PackLenInfo(IOCPTool.Serialize<T>(msg));
             return SendMsg(bytes);
         }
 
@@ -166,19 +166,8 @@ namespace PENet
             }
         }
 
-        void OnConnected()
-        {
-            IOCPTool.Log("Connect Success");
-        }
-
-        void OnReceiveMsg(IOCPMsg msg)
-        {
-            IOCPTool.Log("收到数据"+msg.hellomsg);
-        }
-
-        void OnDisConnected()
-        {
-            IOCPTool.Log("DisConnected");
-        }
+        protected abstract void OnConnected();
+        protected abstract void OnReceiveMsg(T msg);  
+        protected abstract void OnDisConnected();
     }
 }

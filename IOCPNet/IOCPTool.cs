@@ -40,7 +40,7 @@ namespace PENet
             return pkg;
         }
 
-        public static byte[] Serialize(IOCPMsg msg)
+        public static byte[] Serialize<T>(T msg) where T: IOCPMsg
         {
             byte[] data = null;
             MemoryStream ms=new MemoryStream();
@@ -63,14 +63,14 @@ namespace PENet
 
         }
 
-        public static IOCPMsg Deserialize(byte[] bytes)
+        public static T Deserialize<T>(byte[] bytes) where T: IOCPMsg
         {
-            IOCPMsg msg=null;
+            T msg=null;
             MemoryStream ms=new MemoryStream(bytes);
             BinaryFormatter bf=new BinaryFormatter();
             try
             {
-                msg=(IOCPMsg)bf.Deserialize(ms);
+                msg=(T)bf.Deserialize(ms);
             }
             catch(SerializationException e)
             {
